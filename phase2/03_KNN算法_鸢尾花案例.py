@@ -1,0 +1,125 @@
+"""
+案例：通过KNN算法实现鸢尾花的分类
+
+机器学习项目的研发流程：
+    1. 加载数据
+    2. 数据的预处理
+    3. 特征工程（提起，预处理...）
+    4. 模型训练
+    5. 模型评估
+    6. 模型预测
+"""
+from sklearn.datasets import load_iris
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split  # 分割训练集和测试集的
+from sklearn.preprocessing import StandardScaler  # 数据标准化的
+from sklearn.neighbors import KNeighborsClassifier  # KNN算法 分类
+from sklearn.metrics import accuracy_score  # 模型评估，计算模型预测的准确率
+
+
+# 1. 定义函数，加载鸢尾花数据集，查看数据集
+def dm01_load_iris():
+    # 1. 加载数据集
+    iris_data = load_iris()
+    # 2. 查看数据集
+    # print(f'数据集{iris_data}')  # 字典形态
+    # print(f'数据集的类型：{type(iris_data)}')
+    # 3. 查看数据集所有的键
+    print(f'数据集所有的键：{iris_data.keys()}')
+
+    # 4. 查看数据集的键对应的值
+    print(f'具体的数据：{iris_data.data[:5]}')  # 共150条数据 每条数据4个特征
+    print(f'具体的标签：{iris_data.target[:5]}')  # 共150条数据 每条数据1个标签
+    print(f'具体的标签名称：{iris_data.target_names}')  # ['setosa' 'versicolor' 'virginica']
+    print(
+        f'特征对应的名称：{iris_data.feature_names}')  # ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
+    # print(f'数据集的文件名：{iris_data.filename}')  # iris.csv
+    # print(f'数据集的模型（在那个包下）：{iris_data.data_module}')  # sklearn.datasets.data
+    # print(f'数据集的描述：{iris_data.DESCR}')
+
+
+# 2. 绘制数据集的散点图
+def dm02_show_iris():
+    # 1. 加载数据集
+    iris_data = load_iris()
+    # 2. 把鸢尾花数据集封装成DataFrame对象
+    iris_df = pd.DataFrame(iris_data.data, columns=iris_data.feature_names)
+    # 3. 给df对象新增1列标签列
+    iris_df['label'] = iris_data.target
+    # print(iris_df)
+
+    # 4. Seaborn绘制散点图
+    sns.lmplot(data=iris_df, x='sepal length (cm)', y='sepal width (cm)', fit_reg=False, hue='label')
+
+    plt.title('iris data')
+    plt.tight_layout()  # 自动调整子图参数，使整个图像的边界与子图匹配
+    plt.show()
+
+
+def dm03_split_train_test():
+    # 1. 加载数据集
+    iris_data = load_iris()
+
+    # 2. 数据预处理：在150条数据中，按照8：2的比例，切分训练集和测试集
+    # 参1：特征数据 参2：标签数据 参3：测试集比例 参4：随机种子（种子一致，每次生成的随机数据集都是固定的）
+    x_train, x_test, y_train, y_test = train_test_split(iris_data.data, iris_data.target, test_size=0.2,
+                                                        random_state=23)
+
+    # 3.打印切割后的结果
+    print(f'训练集的特征：{x_train},个数：{len(x_train)}')  # 120条
+    print(f'训练集的标签：{y_train},个数：{len(y_train)}')
+    print(f'测试集的特征：{x_test},个数：{len(x_test)}')  # 30条
+    print(f'测试集的标签：{y_test},个数：{len(y_test)}')
+
+
+# 加载数据，数据预处理，特征工程，模型训练，模型评估，模型预测
+def dm04_iris_evaluate_test():
+    # 1. 加载数据集
+    iris_data = load_iris()
+    # 2. 数据预处理
+    x_train, x_test, y_train, y_test = train_test_split(iris_data.data, iris_data.target, test_size=0.2,
+                                                        random_state=22)
+    # 3. 特征提取（提取，预处理...）
+    # 无需特征提取
+    # 3.1 创建标准化对象
+    transfer = StandardScaler()
+    # 3.2 对特征列进行标准化
+    # fit_transform: 兼具fit和transform的功能，即：训练，转换，该函数适用于：第一次标准化的时候使用，一般用于处理训练集
+    x_train = transfer.fit_transform(x_train)
+    # transform:只有转换，该函数适用于：重复进行标准化动作时使用，一般用于对测试集进行标准化
+    x_test = transfer.transform(x_test)
+
+    # 4. 模型训练
+    # 4.1 创建模型
+    estimator = KNeighborsClassifier(n_neighbors=3)
+    # 4.2 训练模型
+    estimator.fit(x_train, y_train)
+
+    # 5. 模型预测
+    # 场景1：对刚才切分的测试集（30条）进行测试
+    y_pred = estimator.predict(x_test)
+    print(f'预测值为：{y_pred}')
+
+    # 场景2：对新的数据集进行测试
+    # 5.1 自定义测试数据集
+    my_data = [[7.8, 2.1, 3.9, 1.6]]
+    # 5.2 标准化
+    my_data = transfer.transform(my_data)
+    # 5.3 模型预测
+    y_pred_new=estimator.predict(my_data)
+    print(f'预测值为：{y_pred_new}')
+
+    # 5.4 查看上述数据集，每种分类的预测概率
+    y_pred_proba=estimator.predict_proba(my_data)
+    print(f'各分类预测概率为：{y_pred_proba}')   # [[0.         0.66666667 0.33333333]]
+
+    # 6. 模型评估
+    # 方式1：直接评分，基于：测试集的特征和测试集的标签
+    print(f'正确率：{estimator.score(x_test,y_test)}')
+    # 方式2：基于测试集的标签和预测结果进行评分
+    print(f'正确率：{accuracy_score(y_test,y_pred)}')
+if __name__ == '__main__':
+    # dm03_split_train_test()
+    dm04_iris_evaluate_test()
