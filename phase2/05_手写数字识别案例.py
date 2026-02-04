@@ -6,6 +6,9 @@ from sklearn.neighbors import KNeighborsClassifier
 import joblib
 from collections import Counter
 
+# 忽略警告
+import warnings
+warnings.filterwarnings('ignore',module='sklearn')
 
 def show_digit(idx):
     df = pd.read_csv('./data/手写数字识别.csv')
@@ -46,7 +49,7 @@ def train_model():
     x = x / 255
 
     # 参考y值进行抽取，保持标签的比例（数据均衡）
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=23, stratify=y)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=22, stratify=y)
 
     estimator = KNeighborsClassifier(n_neighbors=3)
 
@@ -60,9 +63,36 @@ def train_model():
     print('模型保存成功')
 
 
+def use_model():
+    # 1. 加载图片
+    x = plt.imread('./data/demo.png')  # 28 * 28 图片
+    # 2. 绘制图片
+    # plt.imshow(x, cmap='gray')
+    # plt.axis('off')
+    # plt.show()
+
+    # 3. 加载模型
+    estimator = joblib.load('./my_model/手写数字识别.pkl')
+
+    # 4. 模型预测
+    # print(x.shape)                  # 28 * 28
+    # print(x.reshape(1,784).shape)   # 1 * 784
+    print(x.reshape(1, -1).shape)  # 语法糖
+
+    # 4.2 具体的转换动作 imread已经进行了归一化操作
+    x = x.reshape(1, -1)
+
+    # 4.3 模型预测
+    y_pre = estimator.predict(x)
+
+    print(f'预测值为：{y_pre}')
+
 if __name__ == '__main__':
     # 绘制数字
     # show_digit(23)
 
-    #
+    # 训练模型，保存模型
     train_model()
+
+    # 模型预测（使用模型）
+    use_model()
